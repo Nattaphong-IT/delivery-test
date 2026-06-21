@@ -1,0 +1,88 @@
+ส่วนที่ 1 — Technical Mastery & Scalability (40 คะแนน)
+ 
+
+ข้อ 1: Smart & Stale Rider Assignment (15 คะแนน)
+
+จงเขียนฟังก์ชัน assignRider(order, riders) เพื่อหา Rider ที่เหมาะสมที่สุด โดยมีเงื่อนไข:
+
+Distance: ใช้สูตร Haversine คำนวณระยะทางจาก Rider ถึงร้านอาหาร
+Stale Data Protection: ห้ามเลือก Rider ที่ไม่ได้อัปเดตพิกัดเกิน 2 นาที
+Tie-breaker: ถ้าระยะทางต่างกันไม่เกิน 500 เมตร ให้เลือกคนที่มี Rating สูงกว่า
+Edge Case: หากไม่มี Rider ในระยะ 5 กม. เลย ระบบควรทำอย่างไร? อธิบาย Logic การขยายรัศมีหรือ Fallback
+ 
+
+ข้อ 2: SQL — Revenue Attribution & Ranking (10 คะแนน)
+
+จงเขียน SQL เพื่อหา "ร้านอาหารที่มีมูลค่าคำสั่งซื้อเฉลี่ย (AOV) สูงสุด 3 อันดับแรกในแต่ละ Category" โดย:
+
+นับเฉพาะออเดอร์ที่ status = 'delivered' ในเดือนปัจจุบันเท่านั้น
+ต้องจัดการกรณีที่บางร้านไม่มีออเดอร์เลย
+ต้องใช้ Window Function เพื่อจัดอันดับภายในกลุ่ม
+ 
+
+ข้อ 3: Code Review — Inventory Race Condition (15 คะแนน)
+
+จงแก้ไข Code ต่อไปนี้ที่ใช้ตัดสต็อกเมื่อมีการสั่งซื้อ:
+
+async function placeOrder(orderId, items) {
+
+    for (const item of items) {
+
+        const product = await db.query(
+
+            `SELECT stock FROM menu WHERE id = ${item.id}`),
+
+        if (product.stock >= item.qty) {
+
+            await db.query(
+
+                `UPDATE menu SET stock = stock - ${item.qty} WHERE id = ${item.id}`),
+
+        }
+
+    }
+
+    await Order.create({ id: orderId, status: 'confirmed' });
+
+}
+
+ระบุปัญหา N+1 Query, Race Condition (สต็อกติดลบ), และการขาด Transaction พร้อมเขียน Code ใหม่ที่ใช้ Atomic Update หรือ Pessimistic Locking
+
+ 
+
+ส่วนที่ 2 — System Design & Business Logic (30 คะแนน)
+ 
+
+ข้อ 4: Real-time Live Tracking Architecture (15 คะแนน)
+
+ออกแบบระบบที่รองรับการติดตาม Rider 2,000 คนพร้อมกัน โดยลูกค้า 10,000 คนต้องเห็นตำแหน่งขยับแบบ Real-time:
+
+Data Flow: จะใช้โปรโตคอลใดระหว่าง WebSocket, gRPC, หรือ MQTT เพราะเหตุใด?
+Storage Strategy: ตำแหน่งพิกัดที่เปลี่ยนทุก 2 วินาที ควรเก็บลง Database ประเภทใด (SQL / NoSQL / In-memory) เพื่อไม่ให้ Disk I/O เต็ม?
+ 
+
+ข้อ 5: Rush Hour Cancellation Crisis (15 คะแนน)
+
+จาก Scenario ที่ Rider ยกเลิกงานสูงถึง 25% ในช่วง Rush Hour:
+
+Requirement: ออกแบบฟีเจอร์ Dynamic Incentive (โบนัสพิเศษรายพื้นที่) เพื่อดึงดูด Rider
+Data Modeling: ออกแบบ Schema ที่เก็บประวัติการยกเลิกงาน (Cancellation Log) เพื่อวิเคราะห์พฤติกรรมทุจริต (Fraud Detection)
+ 
+
+ส่วนที่ 3 — AI Implementation & Guardrails (30 คะแนน)
+ 
+
+ข้อ 6: AI-Powered Delivery Time Predictor (10 คะแนน)
+
+เขียน Prompt เพื่อให้ AI คำนวณ ETA โดยใช้ข้อมูล: ระยะทาง, สภาพอากาศ (ฝนตก), และเวลาเตรียมอาหารของร้าน
+
+พร้อมระบุวิธีจัดการหาก AI ทำนายเวลาผิดพลาดอย่างรุนแรง เช่น บอกว่าถึงใน 5 นาที ทั้งที่ฝนตกหนักและร้านอยู่ไกล 10 กม.
+
+ 
+
+ข้อ 7: Dynamic Pricing Engine — Surge Pricing (20 คะแนน)
+
+ออกแบบฟีเจอร์ปรับค่าส่งตาม Demand/Supply:
+
+Architecture: เขียน Diagram แสดงการไหลของข้อมูลจาก Rider App ไปยัง AI Model และสะท้อนกลับไปที่ Customer App
+Safety & Ethics: หาก AI แนะนำค่าส่งที่แพงเกินไปจนผิดกฎหมายคุ้มครองผู้บริโภค จะวาง Hard-coded Guardrails อย่างไร?
